@@ -10,18 +10,18 @@
     >
 
       <div class="title-container">
-        <h3 class="title">Login Form</h3>
+        <h3 class="title">登&nbsp;&nbsp;录</h3>
       </div>
 
-      <el-form-item prop="username">
+      <el-form-item prop="userName">
         <span class="svg-container">
           <svg-icon icon-class="user" />
         </span>
         <el-input
-          ref="username"
-          v-model="loginForm.username"
-          placeholder="Username"
-          name="username"
+          ref="userName"
+          v-model="loginForm.userName"
+          placeholder="userName"
+          name="userName"
           type="text"
           tabindex="1"
           auto-complete="on"
@@ -50,51 +50,90 @@
           <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
         </span>
       </el-form-item>
+      <el-row :gutter="14">
+        <el-col :span="13">
+          <el-form-item prop="vCode">
+            <span class="svg-container">
+              <svg-icon icon-class="form" />
+            </span>
+            <el-input
+              ref="vCode"
+              v-model="loginForm.vCode"
+              placeholder="验证码"
+              name="vCode"
+              type="text"
+              tabindex="1"
+              auto-complete="on"
+            />
+          </el-form-item>
+
+        </el-col>
+        <el-col :span="8">
+          <ImageVCode ref="imageVCode" />
+        </el-col>
+      </el-row>
+      <el-form-item prop="password">
+        <Captcha ref="noCaptcha" :width="448" />
+      </el-form-item>
 
       <el-button
         :loading="loading"
         type="primary"
         style="width:100%;margin-bottom:30px;"
         @click.native.prevent="handleLogin"
-      >Login</el-button>
+      >登录</el-button>
 
       <div class="tips">
-        <span style="margin-right:20px;">username: admin</span>
-        <span> password: any</span>
+        <span style="margin-right:20px;" />
+        <span />
       </div>
-
     </el-form>
   </div>
 </template>
 
 <script>
-import { validUsername } from '@/utils/validate'
+import ImageVCode from '@/components/Verify'
+import Captcha from '@/components/Captcha'
+import { login } from '@/api/user'
 
 export default {
   name: 'Login',
+  components: {
+    'ImageVCode': ImageVCode,
+    'Captcha': Captcha
+  },
   data() {
     const validateUsername = (rule, value, callback) => {
-      if (!validUsername(value)) {
-        callback(new Error('Please enter the correct user name'))
+      if (!value || value.length < 4) {
+        callback(new Error('请输入用户名'))
       } else {
         callback()
       }
     }
     const validatePassword = (rule, value, callback) => {
-      if (value.length < 6) {
-        callback(new Error('The password can not be less than 6 digits'))
+      if (!value || value.length < 6) {
+        callback(new Error('密码不能少于6位'))
+      } else {
+        callback()
+      }
+    }
+    const validateVCode = (rule, value, callback) => {
+      if (!value || value.length < 4) {
+        callback(new Error('请输入验证码'))
       } else {
         callback()
       }
     }
     return {
       loginForm: {
-        username: 'admin',
-        password: '111111'
+        userName: 'admin',
+        password: 'admin123'
       },
       loginRules: {
-        username: [{ required: true, trigger: 'blur', validator: validateUsername }],
-        password: [{ required: true, trigger: 'blur', validator: validatePassword }]
+        userName: [{ required: true, trigger: 'blur', validator: validateUsername }],
+        password: [{ required: true, trigger: 'blur', validator: validatePassword }],
+        vCode: [{ required: true, trigger: 'blur', validator: validateVCode }]
+
       },
       loading: false,
       passwordType: 'password',
@@ -109,6 +148,9 @@ export default {
       immediate: true
     }
   },
+  created() {
+
+  },
   methods: {
     showPwd() {
       if (this.passwordType === 'password') {
@@ -121,15 +163,17 @@ export default {
       })
     },
     handleLogin() {
+      const vm = this
       this.$refs.loginForm.validate(valid => {
         if (valid) {
-          console.log('VUE_APP_BASE_API:' + process.env.VUE_APP_BASE_API)
-          this.loading = true
-          this.$store.dispatch('user/login', this.loginForm).then(() => {
-            this.$router.push({ path: this.redirect || '/' })
-            this.loading = false
+          vm.loading = true
+          login(vm.loginForm).then(res => {
+            vm.$router.push({ path: this.redirect || '/' })
+            vm.loading = false
           }).catch(() => {
-            this.loading = false
+            vm.loading = false
+            this.$refs['noCaptcha'].init()
+            this.$refs['imageVCode'].refreshCode()
           })
         } else {
           console.log('error submit!!')

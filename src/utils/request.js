@@ -1,8 +1,7 @@
 import axios from 'axios'
-import { MessageBox, Message } from 'element-ui'
+import { Message } from 'element-ui'
 import { showFullScreenLoading, tryHideFullScreenLoading } from '@/utils/axiosLoading'
 import store from '@/store'
-import { getToken } from '@/utils/auth'
 
 // create an axios instance
 const service = axios.create({
@@ -14,28 +13,39 @@ const service = axios.create({
 // request interceptor
 service.interceptors.request.use(
   config => {
-    if (store.getters.token) {
-      config.headers['X-Token'] = getToken()
+    if (store.getters.noCaptcha.token) { // 滑块验证码
+      config.headers['noCaptcha-scene'] = store.getters.noCaptcha.scene
+      config.headers['noCaptcha-sessionId'] = store.getters.noCaptcha.sessionId
+      config.headers['noCaptcha-sig'] = store.getters.noCaptcha.sig
+      config.headers['noCaptcha-token'] = store.getters.noCaptcha.token
+    }
+    if (store.getters.verify.token) { // 图形验证码
+      if (store.getters.verify.expireTime && new Date(store.getters.verify.expireTime) > new Date()) {
+        config.headers['verify-token'] = store.getters.verify.token
+      }
+    }
+    if (!config.hideLoading) {
+      let loadingText = ''
+      switch (config.method) {
+        case 'get':
+        case 'post':
+          loadingText = '正在请求……'
+          break
+        case 'put':
+          loadingText = '数据提交中……'
+          break
+        case 'delete':
+          loadingText = '数据删除中……'
+          break
+      }
+      showFullScreenLoading(loadingText)
     }
 
-    let loadingText = ''
-    switch (config.method) {
-      case 'get':
-      case 'post':
-        loadingText = '正在请求……'
-        break
-      case 'put':
-        loadingText = '数据提交中……'
-        break
-      case 'delete':
-        loadingText = '数据删除中……'
-        break
-    }
-    showFullScreenLoading(loadingText)
     return config
   },
   error => {
     console.log(error) // for debug
+    tryHideFullScreenLoading()
     return Promise.reject(error)
   }
 )
@@ -46,26 +56,12 @@ service.interceptors.response.use(
     tryHideFullScreenLoading()
     const res = response.data
     // if the custom code is not 20000, it is judged as an error.
-    if (res.code !== 20000 && res.Result !== 0) {
+    if (res.code !== 0) {
       Message({
-        message: res.Message || 'Error',
+        message: res.message || 'Error',
         type: 'error',
         duration: 5 * 1000
       })
-
-      // 50008: Illegal token; 50012: Other clients logged in; 50014: Token expired;
-      if (res.code === 50008 || res.code === 50012 || res.code === 50014) {
-        // to re-login
-        MessageBox.confirm('You have been logged out, you can cancel to stay on this page, or log in again', 'Confirm logout', {
-          confirmButtonText: 'Re-Login',
-          cancelButtonText: 'Cancel',
-          type: 'warning'
-        }).then(() => {
-          store.dispatch('user/resetToken').then(() => {
-            location.reload()
-          })
-        })
-      }
       return Promise.reject(new Error(res.message || 'Error'))
     } else {
       return res
