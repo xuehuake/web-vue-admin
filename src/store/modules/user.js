@@ -1,83 +1,85 @@
-import { login, logout, getInfo } from '@/api/user'
-import { getToken, setToken, removeToken } from '@/utils/auth'
 import { resetRouter } from '@/router'
-
+import { logout, refresh_token } from '@/api/user'
+import dateUtil from '@/utils/date'
 const state = {
-  token: getToken(),
-  name: '',
-  avatar: ''
+  userToken: {
+    access_token: '',
+    expires_in: 0,
+    createDateTime: null,
+    expiresTime: null,
+    refresh_token: '',
+    scope: '',
+    token_type: '',
+    jti: '',
+    Authorization: ''
+  },
+  userInfo: {
+    name: '',
+    avatar: ''
+  }
 }
 
 const mutations = {
-  SET_TOKEN: (state, token) => {
-    state.token = token
+  SET_USERTOKEN: (state, data) => {
+    const { access_token, expires_in, refresh_token, scope, token_type, jti, Authorization } = data
+    var createDateTime = new Date()
+    var expiresTime = dateUtil.DateAdd('s', expires_in - 60, createDateTime)
+    state.userToken = { access_token, expires_in, refresh_token, scope, token_type, jti, createDateTime, expiresTime, Authorization }
   },
-  SET_NAME: (state, name) => {
-    state.name = name
+  SET_USERINFO: (state, data) => {
+    const { name, avatar } = data
+    state.userInfo = { name, avatar }
   },
-  SET_AVATAR: (state, avatar) => {
-    state.avatar = avatar
+  CLEARINFO: (state) => {
+    state.userToken = {}
+    state.userInfo = {}
   }
 }
 
 const actions = {
   // user login
-  login({ commit }, userInfo) {
-    const { username, password } = userInfo
-    return new Promise((resolve, reject) => {
-      login({ username: username.trim(), password: password }).then(response => {
-        const { data } = response
-        commit('SET_TOKEN', data.token)
-        setToken(data.token)
-        resolve()
-      }).catch(error => {
-        reject(error)
-      })
-    })
+  login({ commit }, data) {
+    data.avatar = 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif'
+    commit('SET_USERTOKEN', data)
+    commit('SET_USERINFO', data)
   },
-
-  // get user info
-  getInfo({ commit, state }) {
-    return new Promise((resolve, reject) => {
-      getInfo(state.token).then(response => {
-        const { data } = response
-
-        if (!data) {
-          reject('Verification failed, please Login again.')
-        }
-
-        const { name, avatar } = data
-
-        commit('SET_NAME', name)
-        commit('SET_AVATAR', avatar)
-        resolve(data)
-      }).catch(error => {
-        reject(error)
-      })
-    })
-  },
-
   // user logout
   logout({ commit, state }) {
+    commit('CLEARINFO')
     return new Promise((resolve, reject) => {
       logout(state.token).then(() => {
-        commit('SET_TOKEN', '')
-        removeToken()
         resetRouter()
         resolve()
       }).catch(error => {
-        reject(error)
+        // reject(error)
+        console.log(error)
+        resolve()
       })
     })
   },
+  getAccessToken({ commit, state }) {
+    var token = ''
+    if (state.userToken && state.userToken.expiresTime && state.userToken.access_token) {
+      var now = new Date()
+      if (now > new Date(state.userToken.expiresTime)) {
+        commit('SET_USERTOKEN', {})
+        if (state.userToken.refresh_token) {
+          refresh_token({
+            refresh_token: state.userToken.refresh_token
+          }).then(res => {
 
-  // remove token
-  resetToken({ commit }) {
-    return new Promise(resolve => {
-      commit('SET_TOKEN', '')
-      removeToken()
-      resolve()
-    })
+          }).catch(err => {
+            console.log(err)
+            commit('SET_USERTOKEN', {})
+          })
+        }
+      } else {
+        token = state.userToken.token_type + ' ' + state.userToken.access_token
+        state.userToken.Authorization = token
+        commit('SET_USERTOKEN', state.userToken)
+      }
+    }
+    return token
   }
 }
 

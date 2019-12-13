@@ -193,7 +193,7 @@ export default {
             aesType: 'NetCore'
           }).then(res => {
             console.log(res)
-            vm.aesForm.result = res.Data
+            vm.aesForm.result = res.data
           }).catch()
         }
       })
@@ -208,7 +208,7 @@ export default {
             aesType: 'NetCore'
           }).then(res => {
             console.log(res)
-            vm.aesForm.result = res.Data
+            vm.aesForm.result = res.data
           }).catch()
         }
       })
@@ -223,7 +223,7 @@ export default {
             desType: 'WebForm'
           }).then(res => {
             console.log(res)
-            vm.desForm.result = res.Data
+            vm.desForm.result = res.data
           }).catch()
         }
       })
@@ -238,7 +238,7 @@ export default {
             desType: 'WebForm'
           }).then(res => {
             console.log(res)
-            vm.desForm.result = res.Data
+            vm.desForm.result = res.data
           }).catch()
         }
       })
@@ -246,7 +246,7 @@ export default {
     getRSAKeys() {
       const vm = this
       GetRSAKeys().then(res => {
-        vm.rsaKeyForm.result = res.Data
+        vm.rsaKeyForm.result = res.data
       }).catch()
     },
     getPrivateKeyByPfx() {
@@ -256,7 +256,7 @@ export default {
         file: vm.rsaKeyForm.file,
         key: vm.rsaKeyForm.password.trim()
       }).then(res => {
-        vm.rsaKeyForm.result = res.Data
+        vm.rsaKeyForm.result = res.data
       }).catch()
     },
     getPublicKeyByCert() {
@@ -265,7 +265,7 @@ export default {
         file: vm.rsaKeyForm.file,
         key: vm.rsaKeyForm.password.trim()
       }).then(res => {
-        vm.rsaKeyForm.result = res.Data
+        vm.rsaKeyForm.result = res.data
       }).catch()
     },
     Sign() {
@@ -277,7 +277,7 @@ export default {
             key: vm.rsaForm.key.trim()
           }).then(res => {
             console.log(res)
-            vm.rsaForm.result = res.Data
+            vm.rsaForm.result = res.data
           }).catch()
         }
       })
@@ -291,7 +291,7 @@ export default {
             key: vm.rsaForm.key.trim()
           }).then(res => {
             console.log(res)
-            vm.rsaForm.result = res.Data
+            vm.rsaForm.result = res.data
           }).catch()
         }
       })
@@ -305,7 +305,7 @@ export default {
             key: vm.rsaForm.key.trim()
           }).then(res => {
             console.log(res)
-            vm.rsaForm.result = res.Data
+            vm.rsaForm.result = res.data
           }).catch()
         }
       })
@@ -319,7 +319,7 @@ export default {
             key: vm.rsaForm.key.trim()
           }).then(res => {
             console.log(res)
-            vm.rsaForm.result = res.Data
+            vm.rsaForm.result = res.data
           }).catch()
         }
       })
@@ -333,7 +333,7 @@ export default {
             key: vm.rsaForm.key.trim()
           }).then(res => {
             console.log(res)
-            vm.rsaForm.result = res.Data
+            vm.rsaForm.result = res.data
           }).catch()
         }
       })
@@ -347,7 +347,7 @@ export default {
             key: vm.rsaForm.key.trim()
           }).then(res => {
             console.log(res)
-            vm.rsaForm.result = res.Data
+            vm.rsaForm.result = res.data
           }).catch()
         }
       })

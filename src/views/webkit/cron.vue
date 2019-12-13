@@ -101,7 +101,7 @@ export default {
         limitCount: vm.cronForm.count
       }).then(res => {
         console.log(res)
-        vm.cronForm.result = res.Data
+        vm.cronForm.result = res.data
       })
     }
   }

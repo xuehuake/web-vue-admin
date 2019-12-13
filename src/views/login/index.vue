@@ -126,8 +126,8 @@ export default {
     }
     return {
       loginForm: {
-        userName: 'admin',
-        password: 'admin123'
+        userName: '',
+        password: ''
       },
       loginRules: {
         userName: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -168,6 +168,12 @@ export default {
         if (valid) {
           vm.loading = true
           login(vm.loginForm).then(res => {
+            this.$store.dispatch('user/login', res.data).then(() => {
+              this.$router.push({ path: this.redirect || '/' })
+              this.loading = false
+            }).catch(() => {
+              this.loading = false
+            })
             vm.$router.push({ path: this.redirect || '/' })
             vm.loading = false
           }).catch(() => {

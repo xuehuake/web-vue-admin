@@ -3,7 +3,7 @@ import Qs from 'qs'
 
 export function GetExecuteTimes(data) {
   return request({
-    url: '/cron/parser',
+    url: '/user/api/cron/parser',
     method: 'post',
     data: Qs.stringify(data)
   })

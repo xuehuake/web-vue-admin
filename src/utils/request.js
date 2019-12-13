@@ -13,6 +13,12 @@ const service = axios.create({
 // request interceptor
 service.interceptors.request.use(
   config => {
+    if (!config.noauth) {
+      store.dispatch('user/getAccessToken')
+      if (store.getters.token) {
+        config.headers['Authorization'] = store.getters.token
+      }
+    }
     if (store.getters.noCaptcha.token) { // 滑块验证码
       config.headers['noCaptcha-scene'] = store.getters.noCaptcha.scene
       config.headers['noCaptcha-sessionId'] = store.getters.noCaptcha.sessionId
@@ -24,7 +30,9 @@ service.interceptors.request.use(
         config.headers['verify-token'] = store.getters.verify.token
       }
     }
-    if (!config.hideLoading) {
+    if (config.loadingText) {
+      showFullScreenLoading(config.loadingText)
+    } else if (!config.hideLoading) {
       let loadingText = ''
       switch (config.method) {
         case 'get':
@@ -56,7 +64,7 @@ service.interceptors.response.use(
     tryHideFullScreenLoading()
     const res = response.data
     // if the custom code is not 20000, it is judged as an error.
-    if (res.code !== 0) {
+    if (res.code !== 200) {
       Message({
         message: res.message || 'Error',
         type: 'error',
@@ -70,11 +78,13 @@ service.interceptors.response.use(
   error => {
     tryHideFullScreenLoading()
     console.log('err' + error) // for debug
-    Message({
-      message: error.message,
-      type: 'error',
-      duration: 5 * 1000
-    })
+    if (!error.config || !error.config.notTip) {
+      Message({
+        message: error.message,
+        type: 'error',
+        duration: 5 * 1000
+      })
+    }
     return Promise.reject(error)
   }
 )

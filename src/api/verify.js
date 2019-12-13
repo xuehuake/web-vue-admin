@@ -5,6 +5,7 @@ export function getVerifyCode(ip) {
     url: '/user/api/verify/ImgCaptcha',
     method: 'get',
     hideLoading: true,
+    noauth: true,
     headers: {}
   }
   obj.headers['verify-ip'] = ip
@@ -16,6 +17,7 @@ export function getNoCaptcha(ip) {
     url: '/user/api/verify/NoCaptcha',
     method: 'get',
     hideLoading: true,
+    noauth: true,
     headers: {}
   }
   obj.headers['verify-ip'] = ip
