@@ -2,9 +2,12 @@ import axios from 'axios'
 import { Message } from 'element-ui'
 import { showFullScreenLoading, tryHideFullScreenLoading } from '@/utils/axiosLoading'
 import { getToken, refreshToken } from '@/utils/auth'
+import router from '@/router'
 
 // create an axios instance
 const service = axios.create({
+  retry: 10, // 设置全局的请求次数
+  retryDelay: 800, // 重试请求的间隙
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
   // withCredentials: true, // send cookies when cross-domain requests
   timeout: 5000 // request timeout
@@ -68,8 +71,37 @@ service.interceptors.response.use(
     console.log('err' + error) // for debug
     tryHideFullScreenLoading()
     var { config, response } = error
+
+    // 如果config不存在或未设置重试选项，请拒绝
+    if (!config || !config.retry) return Promise.reject(error)
+    // 设置变量跟踪重试次数
+    config.__retryCount = config.__retryCount || 0
+    // 检查是否已经达到最大重试总次数
+    if (config.__retryCount >= config.retry) {
+    // 抛出错误信息
+      return Promise.reject(error)
+    }
+    // 增加请求重试次数
+    config.__retryCount += 1
+
     if (response && response.status === 401) {
-      return refreshToken(config)
+      return refreshToken(config).then(res => {
+        // 创建新的异步请求
+        const backoff = new Promise(function(resolve) {
+          setTimeout(function() {
+            console.log('重新请求********' + config.__retryCount)
+            resolve()
+          }, config.retryDelay || 1)
+        })
+        // 重新请求
+        return backoff.then(function() {
+          console.log('重新请求' + config.__retryCount)
+          return service(config)
+        })
+      }).catch(e => {
+        // Promise.reject(e)
+        router.push(`/login?redirect=${location.pathname}`)
+      })
     } else if (!config || !config.notTip) {
       Message({
         message: error.message,
