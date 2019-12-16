@@ -2,6 +2,7 @@
  * 获取内网ip
  */
 function getUserIPAsync(callBack) {
+  debugger
   var RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection
   if (RTCPeerConnection) {
     (() => {
@@ -22,7 +23,37 @@ function getUserIPAsync(callBack) {
     callBack('127.0.0.1')
   }
 }
-
+function getIPAsync() {
+  return new Promise((resolve, reject) => {
+    const MyPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection
+    const pc = new MyPeerConnection({
+      iceServers: []
+    })
+    const noop = () => {
+    }
+    const localIPs = {}
+    const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/g
+    const iterateIP = (ip) => {
+      if (!localIPs[ip]) resolve(ip)
+      localIPs[ip] = true
+    }
+    pc.createDataChannel('')
+    pc.createOffer().then((sdp) => {
+      sdp.sdp.split('\n').forEach(function(line) {
+        if (line.indexOf('candidate') < 0) return
+        line.match(ipRegex).forEach(iterateIP)
+      })
+      pc.setLocalDescription(sdp, noop, noop)
+    }).catch((reason) => {
+      reject(reason)
+    })
+    pc.onicecandidate = (ice) => {
+      if (!ice || !ice.candidate || !ice.candidate.candidate || !ice.candidate.candidate.match(ipRegex)) return
+      ice.candidate.candidate.match(ipRegex).forEach(iterateIP)
+    }
+  })
+}
 export default {
-  getUserIPAsync
+  getUserIPAsync,
+  getIPAsync
 }

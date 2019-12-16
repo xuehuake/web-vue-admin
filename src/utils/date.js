@@ -9,44 +9,47 @@
  *---------------   DateAdd(interval,number,date)   -----------------
  */
 function DateAdd(interval, number, date) {
+  var timeStamp = Date.parse(date)
+  var tmpDate = date
   switch (interval) {
     case 'y': {
-      date.setFullYear(date.getFullYear() + number)
-      return date
+      tmpDate.setFullYear(date.getFullYear() + number)
+      return tmpDate
     }
     case 'q': {
-      date.setMonth(date.getMonth() + number * 3)
-      return date
+      tmpDate.setMonth(date.getMonth() + number * 3)
+      return tmpDate
     }
     case 'M': {
-      date.setMonth(date.getMonth() + number)
-      return date
+      tmpDate.setMonth(date.getMonth() + number)
+      return tmpDate
     }
     case 'w': {
-      date.setDate(date.getDate() + number * 7)
-      return date
+      timeStamp = timeStamp + number * 60 * 60 * 24 * 7 * 1000
+      break
     }
     case 'd': {
-      date.setDate(date.getDate() + number)
-      return date
+      timeStamp = timeStamp + number * 60 * 60 * 24 * 1000
+      break
     }
     case 'h': {
-      date.setHours(date.getHours() + number)
-      return date
+      timeStamp = timeStamp + number * 60 * 60 * 1000
+      break
     }
     case 'm': {
-      date.setMinutes(date.getMinutes() + number)
-      return date
+      timeStamp = timeStamp + number * 60 * 1000
+      break
     }
     case 's': {
-      date.setSeconds(date.getSeconds() + number)
-      return date
+      timeStamp = timeStamp + number * 1000
+      break
     }
     default: {
       date.setDate(date.getDate() + number)
       return date
     }
   }
+  return new Date(timeStamp)
 }
 export default {
   DateAdd

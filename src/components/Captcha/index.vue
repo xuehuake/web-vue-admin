@@ -7,7 +7,6 @@
 </template>
 <script>
 import { getNoCaptcha } from '@/api/verify'
-import IpUtil from '@/utils/iputil'
 export default {
   name: 'Captcha',
   components: {
@@ -28,41 +27,49 @@ export default {
   },
   data() {
     return {
-      userIp: '127.0.0.1',
       data: null
     }
   },
   created() {
     const vm = this
-    vm.$store.dispatch('noCaptcha/removeData')
-    IpUtil.getUserIPAsync(ip => {
-      console.log(ip)
-      vm.userIp = ip
-      var count = 0
-      var interver = setInterval(() => {
+    vm.removeSession()
+    var count = 0
+    var interver = setInterval(() => {
       // eslint-disable-next-line
       if (count>=10|| typeof noCaptcha !== 'undefined') {
-          clearInterval(interver)
-          vm.init()
-          return
-        }
-        count++
-      }, 500)
-    })
+        clearInterval(interver)
+        vm.init()
+        return
+      }
+      count++
+    }, 500)
   },
   activated() {
 
   },
   methods: {
+    removeSession() {
+      sessionStorage['noCaptcha-scene'] = ''
+      sessionStorage['noCaptcha-sessionId'] = ''
+      sessionStorage['noCaptcha-sig'] = ''
+      sessionStorage['noCaptcha-token'] = ''
+    },
+    setData(data) {
+      var { csessionid, scene, sig, token } = data
+      sessionStorage['noCaptcha-scene'] = scene
+      sessionStorage['noCaptcha-sessionId'] = csessionid
+      sessionStorage['noCaptcha-sig'] = sig
+      sessionStorage['noCaptcha-token'] = token
+    },
     refresh() {
       const vm = this
       // eslint-disable-next-line
       __nc.reset()
-      vm.$store.dispatch('noCaptcha/setData', {})
+      vm.removeSession()
     },
     init() {
       const vm = this
-      getNoCaptcha(vm.userIp).then(res => {
+      getNoCaptcha().then(res => {
         vm.data = res.data
         var nc_token = vm.data.token
         var NC_Opt = {
@@ -85,7 +92,7 @@ export default {
             data.token = nc_token
             data.scene = vm.data.scene
             window.console && console.log(data)
-            vm.$store.dispatch('noCaptcha/setData', data)
+            vm.setData(data)
           }
         }
         // eslint-disable-next-line

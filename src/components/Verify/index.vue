@@ -5,31 +5,27 @@
 </template>
 <script>
 import { getVerifyCode } from '@/api/verify'
-import IpUtil from '@/utils/iputil'
 export default {
   name: 'ImageVCode',
   data() {
     return {
-      base64: '',
-      userIp: '127.0.0.1'
+      base64: ''
     }
   },
   activated() {
   },
   created() {
     const vm = this
-    IpUtil.getUserIPAsync(ip => {
-      console.log(ip)
-      vm.userIp = ip
-      vm.refreshCode()
-    })
+    vm.refreshCode()
   },
   methods: {
     refreshCode() {
       var vm = this
-      getVerifyCode(vm.userIp).then(res => {
+      getVerifyCode().then(res => {
         vm.base64 = res.data.base64
-        this.$store.dispatch('verify/setVerify', res.data)
+        sessionStorage['verify-createTime'] = res.data.createTime
+        sessionStorage['verify-expireTime'] = res.data.expireTime
+        sessionStorage['verify-token'] = res.data.token
       }).catch()
     }
   }

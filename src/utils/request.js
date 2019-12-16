@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { Message } from 'element-ui'
 import { showFullScreenLoading, tryHideFullScreenLoading } from '@/utils/axiosLoading'
-import store from '@/store'
+import { getToken, refreshToken } from '@/utils/auth'
 
 // create an axios instance
 const service = axios.create({
@@ -14,20 +14,9 @@ const service = axios.create({
 service.interceptors.request.use(
   config => {
     if (!config.noauth) {
-      store.dispatch('user/getAccessToken')
-      if (store.getters.token) {
-        config.headers['Authorization'] = store.getters.token
-      }
-    }
-    if (store.getters.noCaptcha.token) { // 滑块验证码
-      config.headers['noCaptcha-scene'] = store.getters.noCaptcha.scene
-      config.headers['noCaptcha-sessionId'] = store.getters.noCaptcha.sessionId
-      config.headers['noCaptcha-sig'] = store.getters.noCaptcha.sig
-      config.headers['noCaptcha-token'] = store.getters.noCaptcha.token
-    }
-    if (store.getters.verify.token) { // 图形验证码
-      if (store.getters.verify.expireTime && new Date(store.getters.verify.expireTime) > new Date()) {
-        config.headers['verify-token'] = store.getters.verify.token
+      const token = getToken()
+      if (token) {
+        config.headers['Authorization'] = token
       }
     }
     if (config.loadingText) {
@@ -76,9 +65,12 @@ service.interceptors.response.use(
     }
   },
   error => {
-    tryHideFullScreenLoading()
     console.log('err' + error) // for debug
-    if (!error.config || !error.config.notTip) {
+    tryHideFullScreenLoading()
+    var { config, response } = error
+    if (response && response.status === 401) {
+      return refreshToken(config)
+    } else if (!config || !config.notTip) {
       Message({
         message: error.message,
         type: 'error',

@@ -1,6 +1,21 @@
 import request from '@/utils/request'
+import iputil from '@/utils/iputil'
+import md5 from 'js-md5'
 
-export function getVerifyCode(ip) {
+async function getIp() {
+  try {
+    if (sessionStorage.clientIp) {
+      return sessionStorage.clientIp
+    }
+    const ip = await iputil.getIPAsync()
+    sessionStorage.clientIp = ip
+    return ip
+  } catch (error) {
+    return '127.0.0.111'
+  }
+}
+
+export async function getVerifyCode() {
   var obj = {
     url: '/user/api/verify/ImgCaptcha',
     method: 'get',
@@ -8,11 +23,18 @@ export function getVerifyCode(ip) {
     noauth: true,
     headers: {}
   }
+  const ua = navigator.userAgent
+  const ip = await getIp()
+  const timestamp = Date.parse(new Date())
+  const signStr = ip + '|' + ua + '|' + timestamp
+  const sign = md5(signStr)
   obj.headers['verify-ip'] = ip
+  obj.headers['verify-time'] = timestamp
+  obj.headers['verify-sign'] = sign
   return request(obj)
 }
 
-export function getNoCaptcha(ip) {
+export async function getNoCaptcha() {
   var obj = {
     url: '/user/api/verify/NoCaptcha',
     method: 'get',
@@ -20,6 +42,13 @@ export function getNoCaptcha(ip) {
     noauth: true,
     headers: {}
   }
+  const ua = navigator.userAgent
+  const ip = await getIp()
+  const timestamp = Date.parse(new Date())
+  const signStr = ip + '|' + ua + '|' + timestamp
+  const sign = md5(signStr)
   obj.headers['verify-ip'] = ip
+  obj.headers['verify-time'] = timestamp
+  obj.headers['verify-sign'] = sign
   return request(obj)
 }

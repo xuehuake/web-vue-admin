@@ -1,5 +1,5 @@
 import { resetRouter } from '@/router'
-import { logout, refresh_token } from '@/api/user'
+import { logout } from '@/api/user'
 import dateUtil from '@/utils/date'
 const state = {
   userToken: {
@@ -10,8 +10,7 @@ const state = {
     refresh_token: '',
     scope: '',
     token_type: '',
-    jti: '',
-    Authorization: ''
+    jti: ''
   },
   userInfo: {
     name: '',
@@ -21,10 +20,10 @@ const state = {
 
 const mutations = {
   SET_USERTOKEN: (state, data) => {
-    const { access_token, expires_in, refresh_token, scope, token_type, jti, Authorization } = data
+    const { access_token, expires_in, refresh_token, scope, token_type, jti } = data
     var createDateTime = new Date()
     var expiresTime = dateUtil.DateAdd('s', expires_in - 60, createDateTime)
-    state.userToken = { access_token, expires_in, refresh_token, scope, token_type, jti, createDateTime, expiresTime, Authorization }
+    state.userToken = { access_token, expires_in, refresh_token, scope, token_type, jti, createDateTime, expiresTime }
   },
   SET_USERINFO: (state, data) => {
     const { name, avatar } = data
@@ -37,6 +36,12 @@ const mutations = {
 }
 
 const actions = {
+  setUsertoken({ commit }, data) {
+    commit('SET_USERTOKEN', data)
+  },
+  setUserInfo({ commit }, data) {
+    commit('SET_USERINFO', data)
+  },
   // user login
   login({ commit }, data) {
     data.avatar = 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif'
@@ -56,30 +61,6 @@ const actions = {
         resolve()
       })
     })
-  },
-  getAccessToken({ commit, state }) {
-    var token = ''
-    if (state.userToken && state.userToken.expiresTime && state.userToken.access_token) {
-      var now = new Date()
-      if (now > new Date(state.userToken.expiresTime)) {
-        commit('SET_USERTOKEN', {})
-        if (state.userToken.refresh_token) {
-          refresh_token({
-            refresh_token: state.userToken.refresh_token
-          }).then(res => {
-
-          }).catch(err => {
-            console.log(err)
-            commit('SET_USERTOKEN', {})
-          })
-        }
-      } else {
-        token = state.userToken.token_type + ' ' + state.userToken.access_token
-        state.userToken.Authorization = token
-        commit('SET_USERTOKEN', state.userToken)
-      }
-    }
-    return token
   }
 }
 

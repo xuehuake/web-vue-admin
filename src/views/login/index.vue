@@ -20,7 +20,7 @@
         <el-input
           ref="userName"
           v-model="loginForm.userName"
-          placeholder="userName"
+          placeholder="用户名"
           name="userName"
           type="text"
           tabindex="1"
@@ -37,7 +37,7 @@
           ref="password"
           v-model="loginForm.password"
           :type="passwordType"
-          placeholder="Password"
+          placeholder="密码"
           name="password"
           tabindex="2"
           auto-complete="on"
@@ -62,8 +62,9 @@
               placeholder="验证码"
               name="vCode"
               type="text"
-              tabindex="1"
+              tabindex="3"
               auto-complete="on"
+              @keyup.enter.native="handleLogin"
             />
           </el-form-item>
 
