@@ -6,6 +6,7 @@ export function login(data) {
     url: '/user/api/user/login',
     method: 'post',
     loadingText: '登录中...',
+    noauth: true,
     data,
     headers: {}
   }
@@ -20,6 +21,7 @@ export function refresh_token(data) {
   return request({
     url: '/user/api/user/refresh_token',
     method: 'put',
+    noauth: true,
     data: Qs.stringify(data)
   })
 }

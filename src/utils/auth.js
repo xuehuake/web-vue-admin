@@ -2,7 +2,7 @@ import store from '@/store'
 import { refresh_token } from '@/api/user'
 
 var refreshing = false
-export function getToken() {
+export async function getToken() {
   var token = ''
   var userToken = store.getters.userToken
   if (userToken && userToken.expiresTime && userToken.access_token) {
@@ -10,7 +10,9 @@ export function getToken() {
     if (now > new Date(userToken.expiresTime)) {
       // 如果token过期
       if (userToken.refresh_token) {
-        refreshToken()
+        await refreshToken()
+        userToken = store.getters.userToken
+        token = userToken.token_type + ' ' + userToken.access_token
       }
     } else {
       token = userToken.token_type + ' ' + userToken.access_token
@@ -19,25 +21,27 @@ export function getToken() {
   return token
 }
 
-export function refreshToken(config) {
-  return new Promise((resolve, reject) => {
+export async function refreshToken() {
+  if (!refreshing) {
     var userToken = store.getters.userToken
-    if (!refreshing) {
-      refreshing = true
-      refresh_token({
-        refresh_token: userToken.refresh_token
-      }).then(res => {
-        debugger
-        store.dispatch('user/setUsertoken', res.data)
-        resolve(res.data)
-      }).catch(err => {
-        debugger
-        store.dispatch('user/setUsertoken', {})
-        reject(err)
-      })
-      setTimeout(function() {
-        refreshing = false
-      }, 1000)
+    var now = new Date()
+    if (userToken && userToken.access_token && userToken.expiresTime && now < new Date(userToken.expiresTime)) {
+      // 已经刷新token无需再刷新
+      return true
     }
-  })
+    refreshing = true
+    setTimeout(function() {
+      refreshing = false
+    }, 1000)
+    try {
+      var res = await refresh_token({
+        refresh_token: userToken.refresh_token
+      })
+      await store.dispatch('user/refreshUsertoken', res.data)
+      return true
+    } catch (error) {
+      store.dispatch('user/refreshUsertoken', null)
+    }
+  }
+  return false
 }

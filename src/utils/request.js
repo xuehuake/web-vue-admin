@@ -7,47 +7,46 @@ import router from '@/router'
 // create an axios instance
 const service = axios.create({
   retry: 10, // 设置全局的请求次数
-  retryDelay: 800, // 重试请求的间隙
+  retryDelay: 2000, // 重试请求的间隙
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
   // withCredentials: true, // send cookies when cross-domain requests
   timeout: 5000 // request timeout
 })
 
 // request interceptor
-service.interceptors.request.use(
-  config => {
-    if (!config.noauth) {
-      const token = getToken()
-      if (token) {
-        config.headers['Authorization'] = token
-      }
+service.interceptors.request.use(async config => {
+  if (!config.noauth) {
+    const token = await getToken()
+    if (token) {
+      config.headers['Authorization'] = token
     }
-    if (config.loadingText) {
-      showFullScreenLoading(config.loadingText)
-    } else if (!config.hideLoading) {
-      let loadingText = ''
-      switch (config.method) {
-        case 'get':
-        case 'post':
-          loadingText = '正在请求……'
-          break
-        case 'put':
-          loadingText = '数据提交中……'
-          break
-        case 'delete':
-          loadingText = '数据删除中……'
-          break
-      }
-      showFullScreenLoading(loadingText)
-    }
-
-    return config
-  },
-  error => {
-    console.log(error) // for debug
-    tryHideFullScreenLoading()
-    return Promise.reject(error)
   }
+  if (config.loadingText) {
+    showFullScreenLoading(config.loadingText)
+  } else if (!config.hideLoading) {
+    let loadingText = ''
+    switch (config.method) {
+      case 'get':
+      case 'post':
+        loadingText = '正在请求……'
+        break
+      case 'put':
+        loadingText = '数据提交中……'
+        break
+      case 'delete':
+        loadingText = '数据删除中……'
+        break
+    }
+    showFullScreenLoading(loadingText)
+  }
+
+  return config
+},
+error => {
+  console.log(error) // for debug
+  tryHideFullScreenLoading()
+  return Promise.reject(error)
+}
 )
 
 // response interceptor
@@ -67,7 +66,7 @@ service.interceptors.response.use(
       return res
     }
   },
-  error => {
+  async error => {
     console.log('err' + error) // for debug
     tryHideFullScreenLoading()
     var { config, response } = error
@@ -85,23 +84,23 @@ service.interceptors.response.use(
     config.__retryCount += 1
 
     if (response && response.status === 401) {
-      return refreshToken(config).then(res => {
-        // 创建新的异步请求
-        const backoff = new Promise(function(resolve) {
-          setTimeout(function() {
-            console.log('重新请求********' + config.__retryCount)
-            resolve()
+      try {
+        const refreshSucc = await refreshToken(config)
+        if (refreshSucc) {
+          // 创建新的异步请求
+          await setTimeout(async function() {
+            console.log(`重新请求${config.url}____${config.__retryCount}`)
+            var reg = new RegExp('^' + config.baseURL + '(.+)')
+            if (reg.test(config.url)) {
+              config.url = reg.exec(config.url)[1]
+            }
+            console.log(config)
+            return service(config)
           }, config.retryDelay || 1)
-        })
-        // 重新请求
-        return backoff.then(function() {
-          console.log('重新请求' + config.__retryCount)
-          return service(config)
-        })
-      }).catch(e => {
-        // Promise.reject(e)
+        }
+      } catch (error) {
         router.push(`/login?redirect=${location.pathname}`)
-      })
+      }
     } else if (!config || !config.notTip) {
       Message({
         message: error.message,

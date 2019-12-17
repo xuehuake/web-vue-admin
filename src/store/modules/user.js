@@ -8,6 +8,8 @@ const state = {
     createDateTime: null,
     expiresTime: null,
     refresh_token: '',
+    refresh_count: 0,
+    refresh_time: null,
     scope: '',
     token_type: '',
     jti: ''
@@ -20,10 +22,10 @@ const state = {
 
 const mutations = {
   SET_USERTOKEN: (state, data) => {
-    const { access_token, expires_in, refresh_token, scope, token_type, jti } = data
+    const { access_token, expires_in, refresh_token, refresh_count, refresh_time, scope, token_type, jti } = data
     var createDateTime = new Date()
     var expiresTime = dateUtil.DateAdd('s', expires_in - 60, createDateTime)
-    state.userToken = { access_token, expires_in, refresh_token, scope, token_type, jti, createDateTime, expiresTime }
+    state.userToken = { access_token, expires_in, refresh_token, refresh_count, refresh_time, scope, token_type, jti, createDateTime, expiresTime }
   },
   SET_USERINFO: (state, data) => {
     const { name, avatar } = data
@@ -39,6 +41,19 @@ const actions = {
   setUsertoken({ commit }, data) {
     commit('SET_USERTOKEN', data)
   },
+  refreshUsertoken({ commit, state }, data) {
+    if (data) {
+      if (state.userToken) {
+        var refresh_count = state.userToken.refresh_count || 0
+        refresh_count += 1
+        data.refresh_count = refresh_count
+      }
+      data.refresh_time = new Date()
+      commit('SET_USERTOKEN', data)
+    } else {
+      commit('SET_USERTOKEN', {})
+    }
+  },
   setUserInfo({ commit }, data) {
     commit('SET_USERINFO', data)
   },
@@ -49,16 +64,14 @@ const actions = {
     commit('SET_USERINFO', data)
   },
   // user logout
-  logout({ commit, state }) {
-    commit('CLEARINFO')
+  logout({ commit }) {
     return new Promise((resolve, reject) => {
-      logout(state.token).then(() => {
+      logout().then(() => {
         resetRouter()
+        commit('CLEARINFO')
         resolve()
       }).catch(error => {
-        // reject(error)
-        console.log(error)
-        resolve()
+        reject(error)
       })
     })
   }
