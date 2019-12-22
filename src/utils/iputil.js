@@ -1,8 +1,8 @@
+import request from '@/utils/request'
 /**
  * 获取内网ip
  */
 function getUserIPAsync(callBack) {
-  debugger
   var RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection
   if (RTCPeerConnection) {
     (() => {
@@ -53,7 +53,36 @@ function getIPAsync() {
     }
   })
 }
+
+async function getIp() {
+  try {
+    if (sessionStorage.clientIp) {
+      return sessionStorage.clientIp
+    }
+    const ip = await getIPAsync()
+    sessionStorage.clientIp = ip
+    return ip
+  } catch (error) {
+    return '127.0.0.111'
+  }
+}
+
+async function getRemoteIp() {
+  try {
+    var res = await request({
+      url: '/getIp',
+      method: 'get',
+      dataType: 'json'
+    })
+    return res.remote_addr
+  } catch (error) {
+    return '127.0.0.111'
+  }
+}
+
 export default {
   getUserIPAsync,
-  getIPAsync
+  getIPAsync,
+  getIp,
+  getRemoteIp
 }

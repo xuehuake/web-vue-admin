@@ -128,7 +128,8 @@ export default {
     return {
       loginForm: {
         userName: '',
-        password: ''
+        password: '',
+        vCode: ''
       },
       loginRules: {
         userName: [{ required: true, trigger: 'blur', validator: validateUsername }],

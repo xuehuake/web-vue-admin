@@ -1,7 +1,7 @@
 'use strict'
 const path = require('path')
 const defaultSettings = require('./src/settings.js')
-
+const webpack = require('webpack')
 function resolve(dir) {
   return path.join(__dirname, dir)
 }
@@ -38,11 +38,12 @@ module.exports = {
     },
     proxy: {
       [process.env.VUE_APP_BASE_API]: {
-        target: 'http://192.168.0.158:8002',
-        changeOrigin: true,
-        pathRewrite: {
-          ['^' + process.env.VUE_APP_BASE_API]: ''
-        }
+        target: 'http://192.168.0.158',
+        changeOrigin: true
+        // ,
+        // pathRewrite: {
+        //   ['^' + process.env.VUE_APP_BASE_API]: ''
+        // }
       }
     }
   },
@@ -54,7 +55,11 @@ module.exports = {
       alias: {
         '@': resolve('src')
       }
-    }
+    }, plugins: [
+      new webpack.DefinePlugin({
+        'process.BUILD_DATE': JSON.stringify(new Date().toLocaleString())
+      })
+    ]
   },
   chainWebpack(config) {
     config.plugins.delete('preload') // TODO: need test
