@@ -45,7 +45,6 @@ export async function login(data) {
 }
 export function refresh_token(data) {
   return request({
-    baseURL: '',
     url: '/user/api/user/refresh_token',
     method: 'put',
     noauth: true,

@@ -3,6 +3,7 @@ import { Message } from 'element-ui'
 import { showFullScreenLoading, tryHideFullScreenLoading } from '@/utils/axiosLoading'
 import { getToken, refreshToken } from '@/utils/auth'
 import router from '@/router'
+import { sleep } from '@/utils/index'
 
 // create an axios instance
 const service = axios.create({
@@ -85,23 +86,18 @@ service.interceptors.response.use(
 
     if (response && response.status === 401) {
       try {
-        const refreshSucc = await refreshToken(config)
+        const refreshSucc = await refreshToken()
         if (refreshSucc) {
+          await sleep(config.retryDelay || 1)// 重试间隙
           // 创建新的异步请求
-          await setTimeout(async function() {
-            console.log(`重新请求${config.url}____${config.__retryCount}`)
-            var reg = new RegExp('^' + config.baseURL + '(.+)')
-            if (reg.test(config.url)) {
-              config.url = reg.exec(config.url)[1]
-            }
-            console.log(config)
-            return service(config)
-          }, config.retryDelay || 1)
+          console.log(`刷新token重新请求${config.url};第${config.__retryCount}次重试`)
+          debugger
+          return axios.create(config)
         }
       } catch (error) {
         router.push(`/login?redirect=${location.pathname}`)
       }
-    } else if (!config || !config.notTip) {
+    } else if (!config || !config.notTip) { // 其他错误且未标注不提示的 Tip消息提示
       Message({
         message: error.message,
         type: 'error',

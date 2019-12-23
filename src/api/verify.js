@@ -31,7 +31,12 @@ export async function getVerifyCode() {
   obj.headers['verify-ip'] = ip
   obj.headers['verify-time'] = timestamp
   obj.headers['verify-sign'] = sign
-  return request(obj)
+
+  var res = await request(obj)
+  sessionStorage['verify-createTime'] = res.data.createTime
+  sessionStorage['verify-expireTime'] = res.data.expireTime
+  sessionStorage['verify-token'] = res.data.token
+  return res
 }
 
 export async function getNoCaptcha() {
@@ -50,5 +55,8 @@ export async function getNoCaptcha() {
   obj.headers['verify-ip'] = ip
   obj.headers['verify-time'] = timestamp
   obj.headers['verify-sign'] = sign
-  return request(obj)
+  var res = await request(obj)
+  sessionStorage['noCaptcha-token'] = res.data.token
+  sessionStorage['noCaptcha-pass'] = false
+  return res
 }

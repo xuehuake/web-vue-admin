@@ -7,6 +7,7 @@
 </template>
 <script>
 import { getNoCaptcha } from '@/api/verify'
+import { Message } from 'element-ui'
 export default {
   name: 'Captcha',
   components: {
@@ -27,8 +28,13 @@ export default {
   },
   data() {
     return {
-      data: null
+      data: null,
+      refreshTimeout: null
     }
+  },
+  destroyed() {
+    var vm = this
+    clearTimeout(vm.refreshTimeout)
   },
   created() {
     const vm = this
@@ -49,17 +55,15 @@ export default {
   },
   methods: {
     removeSession() {
-      sessionStorage['noCaptcha-scene'] = ''
       sessionStorage['noCaptcha-sessionId'] = ''
       sessionStorage['noCaptcha-sig'] = ''
-      sessionStorage['noCaptcha-token'] = ''
+      sessionStorage['noCaptcha-pass'] = false
     },
     setData(data) {
-      var { csessionid, scene, sig, token } = data
-      sessionStorage['noCaptcha-scene'] = scene
+      var { csessionid, sig } = data
       sessionStorage['noCaptcha-sessionId'] = csessionid
       sessionStorage['noCaptcha-sig'] = sig
-      sessionStorage['noCaptcha-token'] = token
+      sessionStorage['noCaptcha-pass'] = true
     },
     refresh() {
       const vm = this
@@ -69,9 +73,22 @@ export default {
     },
     init() {
       const vm = this
+      clearTimeout(vm.refreshTimeout)
       getNoCaptcha().then(res => {
         vm.data = res.data
         var nc_token = vm.data.token
+        var scene = vm.data.scene
+        sessionStorage['noCaptcha-scene'] = scene
+        vm.refreshTimeout = setTimeout(() => {
+          // 验证码过期
+          Message({
+            message: '滑动验证码过期,已为您刷新验证码',
+            type: 'info',
+            duration: 5 * 1000
+          })
+          vm.init()
+        }, (res.data.expireIn - 5) * 1000)
+
         var NC_Opt = {
           renderTo: '#captcha',
           appkey: vm.data.appKey,
@@ -89,10 +106,10 @@ export default {
 
           },
           callback: function(data) {
-            data.token = nc_token
-            data.scene = vm.data.scene
             window.console && console.log(data)
-            vm.setData(data)
+            if (data.value === 'pass') {
+              vm.setData(data)
+            }
           }
         }
         // eslint-disable-next-line

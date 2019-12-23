@@ -105,3 +105,7 @@ export function param2Obj(url) {
       '"}'
   )
 }
+
+export function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
