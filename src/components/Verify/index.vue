@@ -42,6 +42,7 @@ export default {
           })
           vm.refreshCode()
         }, expireTime - now - 5000)
+        console.log(`Image${vm.refreshTimeout}`)
       }).catch()
     }
   }

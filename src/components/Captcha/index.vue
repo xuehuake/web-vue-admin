@@ -88,7 +88,7 @@ export default {
           })
           vm.init()
         }, (res.data.expireIn - 5) * 1000)
-
+        console.log(`NoCaptcha${vm.refreshTimeout}`)
         var NC_Opt = {
           renderTo: '#captcha',
           appkey: vm.data.appKey,

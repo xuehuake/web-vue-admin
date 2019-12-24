@@ -33,8 +33,9 @@ export async function login(data) {
   const ua = navigator.userAgent
   const ip = await iputil.getIp()
   const timestamp = Date.parse(new Date())
-  const IpAddr = await iputil.getRemoteIp()// window.returnCitySN.cip
-  const signStr = IpAddr + ',' + ip + '|' + ua + '|' + timestamp + '|' + data.userName + '|' + data.password
+  // const IpAddr = await iputil.getRemoteIp()// window.returnCitySN.cip
+  // const signStr = IpAddr + ',' + ip + '|' + ua + '|' + timestamp + '|' + data.userName + '|' + data.password
+  const signStr = `${ua}|${timestamp}|${data.userName}|${data.password}|${data.vCode}`
   const sign = md5(signStr)
 
   obj.headers['login-ip'] = ip
