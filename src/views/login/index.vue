@@ -95,7 +95,7 @@
 <script>
 import ImageVCode from '@/components/Verify'
 import Captcha from '@/components/Captcha'
-import { login } from '@/api/user'
+import { login, getInfo } from '@/api/user'
 
 export default {
   name: 'Login',
@@ -176,6 +176,11 @@ export default {
             }).catch(() => {
               this.loading = false
             })
+            getInfo().then(userInfo => {
+              debugger
+              console.log(userInfo)
+            }).catch(e => console.log(e))
+
             vm.$router.push({ path: this.redirect || '/' })
             vm.loading = false
           }).catch(() => {

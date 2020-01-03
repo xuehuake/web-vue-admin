@@ -217,7 +217,7 @@ export default {
         fieldArr.push(`\t\t("${title}","${field}",${objConvert},${rowConvert})`)
       }
       str += fieldArr.join(',\n')
-      str += '\n\t}'
+      str += '\n\t})'
       let code = `\tif (Utils.DataSetIsNull(datas))
         {
             JscriptMsg("没有可供导出的数据！", "back", "Error");

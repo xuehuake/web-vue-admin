@@ -56,7 +56,7 @@ service.interceptors.response.use(
     tryHideFullScreenLoading()
     const res = response.data
     // if the custom code is not 20000, it is judged as an error.
-    if (res.code !== 200) {
+    if (!response.config.noCheck && res.code !== 200) {
       Message({
         message: res.message || 'Error',
         type: 'error',
@@ -71,7 +71,6 @@ service.interceptors.response.use(
     console.log('err' + error) // for debug
     tryHideFullScreenLoading()
     var { config, response } = error
-
     // 如果config不存在或未设置重试选项，请拒绝
     if (!config || !config.retry) return Promise.reject(error)
     // 设置变量跟踪重试次数
@@ -93,6 +92,8 @@ service.interceptors.response.use(
           console.log(`刷新token重新请求${config.url};第${config.__retryCount}次重试`)
           debugger
           return axios.create(config)
+        } else {
+          router.push(`/login?redirect=${location.pathname}`)
         }
       } catch (error) {
         router.push(`/login?redirect=${location.pathname}`)
