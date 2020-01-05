@@ -1,5 +1,5 @@
 import Vue from 'vue'
-
+import Moment from 'moment'
 import 'normalize.css/normalize.css' // A modern alternative to CSS resets
 
 import ElementUI from 'element-ui'
@@ -15,7 +15,7 @@ import router from './router'
 
 import '@/icons' // icon
 import '@/router/permission' // permission control
-import '@/utils/log' // log
+import '@/utils/initial'
 
 // set ElementUI lang to EN
 // Vue.use(ElementUI, { locale })
@@ -23,6 +23,10 @@ import '@/utils/log' // log
 Vue.use(ElementUI)
 
 Vue.config.productionTip = false
+
+Vue.filter('comverTime', function(data, format) {
+  return Moment(data).format(format)
+})
 
 new Vue({
   el: '#app',

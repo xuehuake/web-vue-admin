@@ -8,8 +8,16 @@
           </div>
           <div>
             <el-form ref="cronForm" :model="hqForm">
-              <el-form-item label="股票代码" label-width="100px">
-                <el-input v-model="hqForm.stockCode" placeholder="请输股票代码" />
+              <el-form-item label="搜索股票" label-width="100px">
+                <!-- <el-input v-model="hqForm.stockCode" placeholder="请输股票代码" /> -->
+                <el-autocomplete
+                  v-model="hqForm.keyWords"
+                  :fetch-suggestions="querySearch"
+                  placeholder="股票名称/股票代码"
+                  :trigger-on-focus="false"
+                  clearable
+                  @select="chooseStock"
+                />
               </el-form-item>
               <el-form-item label="接口通道" label-width="100px">
                 <el-select v-model="hqForm.channel" class="filter-item" placeholder="Please select">
@@ -39,12 +47,18 @@
                       </ul>
                     </el-col>
                     <el-col :span="8">
+                      <ul :style="{color:hqInfo.PriceChange>0?'red':'green'}">
+                        <li><strong>涨跌幅: </strong><span v-text="hqInfo.PriceChange" /> &nbsp;&nbsp;<span v-text="hqInfo.PriceChange>0?'↑':'↓'" /> </li>
+                        <li><strong>涨跌率: </strong><span v-text="hqInfo.PriceChangeRate" />% &nbsp;&nbsp;<span v-text="hqInfo.PriceChange>0?'↑':'↓'" /></li>
+                      </ul>
+                    </el-col>
+                    <el-col :span="8">
                       <!-- 五档行情 -->
-                      <ul v-for="(data,index) in hqInfo.FiveTierMarkets" :key="index" class="shop-shelves clearfix">
+                      <ul v-for="(data,index) in hqInfo.FiveTierMarkets" :key="index" class="shop-shelves clearfix" :class="{'split':index==4}">
                         <li>
                           <span v-text="data.HqType=='Buy'?'买':'卖'" /><span class="number" v-text="data.Index" />
                         </li>
-                        <li v-text="data.Price" />
+                        <li><span v-text="data.Price" />¥</li>
                         <li v-text="data.ApplyNum" />
                       </ul>
                     </el-col>
@@ -62,8 +76,9 @@
 </template>
 <script>
 import waves from '@/directive/waves/index.js'
-import { getSingleHqInfo } from '@/api/quotation'
+import { getSingleHqInfo, getStockByKey } from '@/api/quotation'
 import Channels from '@/constants/QuotationChannel'
+import { Message } from 'element-ui'
 export default {
   directives: { waves },
   data() {
@@ -71,23 +86,60 @@ export default {
       Channels: Channels,
       loading: false,
       hqForm: {
-        stockCode: '000001',
+        keyWords: '',
+        stockCode: '',
         channel: 'Sina'
       },
       hqInfo: null
     }
   },
   created() {
-    const vm = this
-    vm.getHq()
+
   },
   methods: {
+    querySearch(keyWords, cb) {
+      const vm = this
+      getStockByKey(keyWords, 'Sina').then(res => {
+        cb(res.map(info => {
+          info.value = `${info.stockName} ${info.stockCode}`
+          return info
+        }))
+      }).catch(e => {
+        Message({
+          message: e || 'Error',
+          type: 'error',
+          duration: 2 * 1000
+        })
+      })
+      vm.hqForm.stockCode = keyWords
+    },
+    chooseStock(stock) {
+      const vm = this
+      vm.hqForm.stockCode = stock.fullStockCode
+      vm.getHq()
+    },
     getHq() {
       const vm = this
+      if (!vm.hqForm.keyWords) {
+        vm.hqInfo = null
+        Message({
+          message: '请输入要查询的股票',
+          type: 'error',
+          duration: 2 * 1000
+        })
+        return
+      }
+
       getSingleHqInfo(vm.hqForm.stockCode, vm.hqForm.channel).then(res => {
         vm.hqInfo = res
-        console.log(JSON.stringify(res))
-      }).catch(e => console.log(e))
+        // console.log(JSON.stringify(res))
+      }).catch(e => {
+        Message({
+          message: e || 'Error',
+          type: 'error',
+          duration: 2 * 1000
+        })
+      })
     }
   }
 }
@@ -116,6 +168,10 @@ aside {
     -moz-osx-font-smoothing: grayscale;
     word-wrap:break-word
 }
+ul.shop-shelves{
+  padding: 0;
+  margin: 10px
+}
 .shop-shelves li{
   float: left;
   list-style-type:none;
@@ -131,6 +187,10 @@ aside {
   width: 20px;
   line-height: 20px;
   text-align: center
+}
+
+.split{
+  border-bottom: 1px dashed;
 }
 </style>
 

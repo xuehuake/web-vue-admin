@@ -1,6 +1,6 @@
 import { resetRouter } from '@/router'
 import { logout } from '@/api/user'
-import dateUtil from '@/utils/date'
+import { AddDate } from '@/utils/date'
 const state = {
   userToken: {
     access_token: '',
@@ -24,7 +24,7 @@ const mutations = {
   SET_USERTOKEN: (state, data) => {
     const { access_token, expires_in, refresh_token, refresh_count, refresh_time, scope, token_type, jti } = data
     var createDateTime = new Date()
-    var expiresTime = dateUtil.DateAdd('s', expires_in - 60, createDateTime)
+    var expiresTime = AddDate('s', expires_in - 60, createDateTime)
     state.userToken = { access_token, expires_in, refresh_token, refresh_count, refresh_time, scope, token_type, jti, createDateTime, expiresTime }
   },
   SET_USERINFO: (state, data) => {
