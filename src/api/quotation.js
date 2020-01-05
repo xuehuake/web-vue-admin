@@ -2,6 +2,7 @@ import request from '@/utils/request'
 import Moment from 'moment'
 class StockHqModel {
   constructor(originalString, stockCode, fullStockCode, channel) { // constructor是一个构造方法，用来接收参数
+    if (!originalString) throw new Error('股票信息不存在')
     this.OriginalString = originalString// this代表的是实例对象
     this.Channel = channel
     this.StockCode = stockCode
@@ -18,6 +19,7 @@ class StockHqModel {
     return parseFloat(strData)
   }
   _ConvertTencentToSina(stockInfo) {
+    if (!stockInfo) return
     var info = stockInfo.split('~')
     if (info) {
       var stock_info = ''
@@ -78,7 +80,7 @@ class StockHqModel {
         this.GeneralString = this.OriginalString
         break
     }
-
+    if (!this.GeneralString) throw new Error('股票信息不存在')
     var hqInfo = this.GeneralString.trim()
     var stock_info = hqInfo.split(',')
     this.StockName = stock_info[0]
@@ -134,7 +136,7 @@ class StockHqModel {
 }
 /**
  * 单支票行情信息
- * @param {6位数字} stockCode
+ * @param {} stockCode
  * @param {Sina,QQ,ZN,EastMoney} channel
  */
 export async function getSingleHqInfo(stockCode, channel) {

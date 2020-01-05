@@ -100,7 +100,7 @@ export default {
     querySearch(keyWords, cb) {
       const vm = this
       getStockByKey(keyWords, 'Sina').then(res => {
-        cb(res.map(info => {
+        cb(res.filter(stock => /^(sh|sz)\d{6}$/.test(stock.fullStockCode)).map(info => {
           info.value = `${info.stockName} ${info.stockCode}`
           return info
         }))
