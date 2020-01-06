@@ -56,7 +56,8 @@ export function getInfo(token) {
   return request({
     url: '/user/api/user/current',
     method: 'get',
-    params: { token }
+    params: { token },
+    noCheck: true
   })
 }
 
