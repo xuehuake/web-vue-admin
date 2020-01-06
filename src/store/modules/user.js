@@ -71,8 +71,7 @@ const actions = {
         commit('CLEARINFO')
         resolve()
       }).catch(error => {
-        console.log(error)
-        resolve()
+        reject(error)
       })
     })
   }

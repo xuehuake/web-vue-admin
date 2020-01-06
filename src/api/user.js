@@ -60,12 +60,17 @@ export function getInfo(token) {
   })
 }
 
-export function logout() {
-  return request({
-    url: '/user/api/user/logout',
-    method: 'delete',
-    loadingText: '退出登录...',
-    noCheck: true,
-    notTip: true
-  })
+export async function logout() {
+  try {
+    var res = await request({
+      url: '/user/api/user/logout',
+      method: 'delete',
+      loadingText: '退出登录...',
+      noCheck: true,
+      notTip: true
+    })
+    return res
+  } catch (error) {
+    return null
+  }
 }
