@@ -64,7 +64,8 @@ export function logout() {
   return request({
     url: '/user/api/user/logout',
     method: 'delete',
-    loadingText: '退出登录',
+    loadingText: '退出登录...',
+    noCheck: true,
     notTip: true
   })
 }
