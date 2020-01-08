@@ -82,28 +82,48 @@ service.interceptors.response.use(
     }
     // 增加请求重试次数
     config.__retryCount += 1
-
-    if (response && response.status === 401) {
-      try {
-        const refreshSucc = await refreshToken()
-        if (refreshSucc) {
-          await sleep(config.retryDelay || 1)// 重试间隙
-          // 创建新的异步请求
-          console.log(`刷新token重新请求${config.url};第${config.__retryCount}次重试`)
-          debugger
-          return axios.create(config)
-        } else {
-          router.push(`/login?redirect=${location.pathname}`)
-        }
-      } catch (error) {
-        router.push(`/login?redirect=${location.pathname}`)
+    if (response) {
+      switch (response.status) {
+        case 401:
+          try {
+            const refreshSucc = await refreshToken()
+            if (refreshSucc) {
+              await sleep(config.retryDelay || 1)// 重试间隙
+              // 创建新的异步请求
+              console.log(`刷新token重新请求${config.url};第${config.__retryCount}次重试`)
+              debugger
+              return axios.create(config)
+            } else {
+              router.push(`/login?redirect=${location.pathname}`)
+            }
+          } catch (error) {
+            router.push(`/login?redirect=${location.pathname}`)
+          }
+          break
+        case 403:
+          Message({
+            message: '您没有此项权限',
+            type: 'error',
+            duration: 5 * 1000
+          })
+          break
+        default:
+          Message({
+            message: `${response.status}:${error.message}`,
+            type: 'error',
+            duration: 5 * 1000
+          })
+          break
       }
-    } else if (!config || !config.notTip) { // 其他错误且未标注不提示的 Tip消息提示
-      Message({
-        message: error.message,
-        type: 'error',
-        duration: 5 * 1000
-      })
+    } else {
+      if (!config || !config.notTip) {
+        // 其他错误且未标注不提示的 Tip消息提示
+        Message({
+          message: error.message,
+          type: 'error',
+          duration: 5 * 1000
+        })
+      }
     }
     return Promise.reject(error)
   }
